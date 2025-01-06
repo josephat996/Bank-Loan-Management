@@ -1,10 +1,11 @@
-
 #include <iostream>
 #include <vector>
 #include <string>
 #include <iomanip>
+
 using namespace std;
 
+// Loan class to store loan details
 class Loan {
 private:
     int loanID;
@@ -15,65 +16,72 @@ private:
 
 public:
     Loan(int id, string name, double amount, double rate)
-        : loanID(id), customerName(name), loanAmount(amount), interestRate(rate), balance(amount) {}
-
-    void displayDetails() {
-        cout << "Loan ID: " << loanID << endl;
-        cout << "Customer Name: " << customerName << endl;
-        cout << fixed << setprecision(2);
-        cout << "Loan Amount: $" << loanAmount << endl;
-        cout << "Interest Rate: " << interestRate << "%" << endl;
-        cout << "Balance: $" << balance << endl;
-        cout << "----------------------------------------" << endl;
+        : loanID(id), customerName(name), loanAmount(amount), interestRate(rate) {
+        balance = loanAmount + (loanAmount * interestRate / 100);
     }
 
-    void makeRepayment(double amount) {
+    // Display loan details
+    void displayDetails() const {
+        cout << "Loan ID: " << loanID << endl;
+        cout << "Customer Name: " << customerName << endl;
+        cout << "Loan Amount: $" << fixed << setprecision(2) << loanAmount << endl;
+        cout << "Interest Rate: " << interestRate << "%" << endl;
+        cout << "Remaining Balance: $" << balance << endl;
+    }
+
+    // Repay the loan
+    void repayLoan(double amount) {
         if (amount > balance) {
-            cout << "Repayment exceeds balance. Repaying full balance of $" << balance << endl;
+            cout << "Overpayment! Remaining balance is $" << fixed << setprecision(2) << balance << endl;
             balance = 0;
         } else {
             balance -= amount;
-            cout << "Repayment of $" << amount << " made. Remaining balance: $" << balance << endl;
+            cout << "Payment successful. Remaining balance: $" << fixed << setprecision(2) << balance << endl;
         }
     }
 
-    int getLoanID() const {
-        return loanID;
+    // Check if the loan is fully repaid
+    bool isFullyRepaid() const {
+        return balance <= 0;
     }
 
-    double getBalance() const {
-        return balance;
-    }
+    int getLoanID() const { return loanID; }
 };
 
+// Bank class to manage loans
 class Bank {
 private:
     vector<Loan> loans;
+    int nextLoanID = 1;
 
 public:
-    void addLoan(int id, string name, double amount, double rate) {
-        loans.emplace_back(id, name, amount, rate);
-        cout << "Loan added successfully for " << name << " with Loan ID: " << id << endl;
+    // Apply for a loan
+    void applyForLoan(const string& name, double amount, double rate) {
+        Loan newLoan(nextLoanID++, name, amount, rate);
+        loans.push_back(newLoan);
+        cout << "Loan application successful! Your Loan ID is " << newLoan.getLoanID() << endl;
     }
 
-    void displayAllLoans() {
-        if (loans.empty()) {
-            cout << "No loans available." << endl;
-            return;
-        }
+    // View loan details by ID
+    void viewLoan(int loanID) const {
         for (const auto& loan : loans) {
-            loan.displayDetails();
-        }
-    }
-
-    void repayLoan(int id, double amount) {
-        for (auto& loan : loans) {
-            if (loan.getLoanID() == id) {
-                loan.makeRepayment(amount);
+            if (loan.getLoanID() == loanID) {
+                loan.displayDetails();
                 return;
             }
         }
-        cout << "Loan ID " << id << " not found." << endl;
+        cout << "Loan ID not found." << endl;
+    }
+
+    // Repay a loan by ID
+    void repayLoan(int loanID, double amount) {
+        for (auto& loan : loans) {
+            if (loan.getLoanID() == loanID) {
+                loan.repayLoan(amount);
+                return;
+            }
+        }
+        cout << "Loan ID not found." << endl;
     }
 };
 
@@ -82,10 +90,9 @@ int main() {
     int choice;
 
     do {
-        cout << "
-=== Bank Loan Management System ===" << endl;
-        cout << "1. Add Loan" << endl;
-        cout << "2. Display All Loans" << endl;
+        cout << "\n===== Bank Loan Management =====" << endl;
+        cout << "1. Apply for a Loan" << endl;
+        cout << "2. View Loan Details" << endl;
         cout << "3. Repay Loan" << endl;
         cout << "4. Exit" << endl;
         cout << "Enter your choice: ";
@@ -93,36 +100,37 @@ int main() {
 
         switch (choice) {
             case 1: {
-                int id;
                 string name;
                 double amount, rate;
-                cout << "Enter Loan ID: ";
-                cin >> id;
-                cout << "Enter Customer Name: ";
+                cout << "Enter your name: ";
                 cin.ignore();
                 getline(cin, name);
-                cout << "Enter Loan Amount: ";
+                cout << "Enter loan amount: $";
                 cin >> amount;
-                cout << "Enter Interest Rate (%): ";
+                cout << "Enter interest rate (%): ";
                 cin >> rate;
-                bank.addLoan(id, name, amount, rate);
+                bank.applyForLoan(name, amount, rate);
                 break;
             }
-            case 2:
-                bank.displayAllLoans();
+            case 2: {
+                int loanID;
+                cout << "Enter Loan ID: ";
+                cin >> loanID;
+                bank.viewLoan(loanID);
                 break;
+            }
             case 3: {
-                int id;
+                int loanID;
                 double amount;
                 cout << "Enter Loan ID: ";
-                cin >> id;
-                cout << "Enter Repayment Amount: ";
+                cin >> loanID;
+                cout << "Enter repayment amount: $";
                 cin >> amount;
-                bank.repayLoan(id, amount);
+                bank.repayLoan(loanID, amount);
                 break;
             }
             case 4:
-                cout << "Exiting the system. Thank you!" << endl;
+                cout << "Exiting system. Goodbye!" << endl;
                 break;
             default:
                 cout << "Invalid choice. Please try again." << endl;
